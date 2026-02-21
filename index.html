@@ -189,7 +189,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="praytimes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/praytime@3.2.0/src/praytime.js"></script>
     <script>
         let map, marker;
         
@@ -241,7 +241,7 @@
             }
             
             const date = new Date();
-            const PT = new PrayTimes();
+            const PT = new PrayTime();
             PT.adjust({ fajr: 15 });
             
             const times = PT.getTimes(date, [latitude, longitude], 3.5);
