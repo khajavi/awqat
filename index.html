@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fajr Time Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #e94560;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #e94560 0%, #c73e54 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .result-time {
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 15px rgba(233, 69, 96, 0.5);
+        }
+        
+        .result-date {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Fajr Time Calculator</h1>
+        
+        <div class="input-group">
+            <label>Latitude</label>
+            <input type="number" id="latitude" step="any" placeholder="e.g., 35.6892" value="35.6892">
+        </div>
+        
+        <div class="input-group">
+            <label>Longitude</label>
+            <input type="number" id="longitude" step="any" placeholder="e.g., 51.3890" value="51.3890">
+        </div>
+        
+        <button onclick="calculateFajr()">Calculate Fajr</button>
+        
+        <div class="result" id="result">
+            <div class="result-label">Fajr Time (15° below horizon)</div>
+            <div class="result-time" id="fajrTime">--:--</div>
+            <div class="result-date" id="currentDate"></div>
+        </div>
+        
+        <div class="info">
+            Using 15° depression angle below the horizon
+        </div>
+    </div>
+
+    <script src="praytimes.js"></script>
+    <script>
+        function calculateFajr() {
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            
+            if (isNaN(latitude) || isNaN(longitude)) {
+                alert('Please enter valid latitude and longitude values');
+                return;
+            }
+            
+            if (latitude < -90 || latitude > 90) {
+                alert('Latitude must be between -90 and 90');
+                return;
+            }
+            
+            if (longitude < -180 || longitude > 180) {
+                alert('Longitude must be between -180 and 180');
+                return;
+            }
+            
+            const date = new Date();
+            const PT = new PrayTimes();
+            PT.adjust({ fajr: 15 });
+            
+            const times = PT.getTimes(date, [latitude, longitude], 3.5);
+            const fajrTime = times.fajr;
+            
+            const resultDiv = document.getElementById('result');
+            const fajrTimeDiv = document.getElementById('fajrTime');
+            const currentDateDiv = document.getElementById('currentDate');
+            
+            fajrTimeDiv.textContent = fajrTime;
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateDiv.textContent = date.toLocaleDateString('en-US', options);
+            
+            resultDiv.classList.add('show');
+        }
+    </script>
+</body>
+</html>
