@@ -45,6 +45,11 @@
             margin-bottom: 20px;
         }
         
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+        
         label {
             display: block;
             color: rgba(255, 255, 255, 0.8);
@@ -61,6 +66,7 @@
             color: #fff;
             font-size: 1rem;
             transition: all 0.3s ease;
+            margin-bottom: 10px;
         }
         
         input:focus {
@@ -155,6 +161,106 @@
             font-size: 0.85rem;
             text-align: center;
         }
+        
+        .favorites-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .favorites-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .favorites-header h3 {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .favorites-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .favorite-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .favorite-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .favorite-item .name {
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        
+        .favorite-item .delete {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 5px;
+            width: auto;
+            margin: 0;
+        }
+        
+        .favorite-item .delete:hover {
+            color: #e94560;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .add-favorite {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .add-favorite input {
+            flex: 1;
+        }
+        
+        .add-favorite button {
+            width: auto;
+            padding: 14px 20px;
+            margin-top: 0;
+            height: 48px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        
+        select option {
+            background: #1a1a2e;
+        }
     </style>
 </head>
 <body>
@@ -165,14 +271,29 @@
             <div id="map"></div>
         </div>
         
-        <div class="input-group">
-            <label>Latitude</label>
-            <input type="number" id="latitude" step="any" placeholder="e.g., 35.6892" value="35.6892">
+        <div class="input-row">
+            <div class="input-group" style="flex: 1;">
+                <label>Latitude</label>
+                <input type="number" id="latitude" step="any" placeholder="e.g., 35.6892" value="35.6892">
+            </div>
+            
+            <div class="input-group" style="flex: 1;">
+                <label>Longitude</label>
+                <input type="number" id="longitude" step="any" placeholder="e.g., 51.3890" value="51.3890">
+            </div>
         </div>
         
-        <div class="input-group">
-            <label>Longitude</label>
-            <input type="number" id="longitude" step="any" placeholder="e.g., 51.3890" value="51.3890">
+        <div class="favorites-section">
+            <div class="favorites-header">
+                <h3>Favorite Places</h3>
+            </div>
+            
+            <div class="add-favorite">
+                <input type="text" id="placeName" placeholder="Place name">
+                <button onclick="addFavorite()">Save</button>
+            </div>
+            
+            <div class="favorites-list" id="favoritesList"></div>
         </div>
         
         <button onclick="calculateFajr()">Calculate Fajr</button>
@@ -220,6 +341,74 @@
         }
         
         document.addEventListener('DOMContentLoaded', initMap);
+        document.addEventListener('DOMContentLoaded', loadFavorites);
+        
+        function loadFavorites() {
+            const favorites = JSON.parse(localStorage.getItem('fajrFavorites') || '[]');
+            const list = document.getElementById('favoritesList');
+            
+            list.innerHTML = '';
+            
+            favorites.forEach((fav, index) => {
+                const item = document.createElement('div');
+                item.className = 'favorite-item';
+                item.innerHTML = `
+                    <span class="name">${fav.name}</span>
+                    <button class="delete" onclick="deleteFavorite(${index})">×</button>
+                `;
+                item.onclick = (e) => {
+                    if (!e.target.classList.contains('delete')) {
+                        selectFavorite(index);
+                    }
+                };
+                list.appendChild(item);
+            });
+        }
+        
+        function addFavorite() {
+            const name = document.getElementById('placeName').value.trim();
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            
+            if (!name) {
+                alert('Please enter a place name');
+                return;
+            }
+            
+            if (isNaN(latitude) || isNaN(longitude)) {
+                alert('Please select a valid location on the map');
+                return;
+            }
+            
+            const favorites = JSON.parse(localStorage.getItem('fajrFavorites') || '[]');
+            favorites.push({ name, latitude, longitude });
+            localStorage.setItem('fajrFavorites', JSON.stringify(favorites));
+            
+            document.getElementById('placeName').value = '';
+            loadFavorites();
+        }
+        
+        function selectFavorite(index) {
+            const favorites = JSON.parse(localStorage.getItem('fajrFavorites') || '[]');
+            
+            if (index === undefined || index === '') return;
+            
+            const fav = favorites[index];
+            if (fav) {
+                document.getElementById('latitude').value = fav.latitude;
+                document.getElementById('longitude').value = fav.longitude;
+                marker.setLatLng([fav.latitude, fav.longitude]);
+                map.setView([fav.latitude, fav.longitude], 10);
+                calculateFajr();
+            }
+        }
+        
+        function deleteFavorite(index) {
+            const favorites = JSON.parse(localStorage.getItem('fajrFavorites') || '[]');
+            favorites.splice(index, 1);
+            localStorage.setItem('fajrFavorites', JSON.stringify(favorites));
+            loadFavorites();
+        }
         
         function calculateFajr() {
             const latitude = parseFloat(document.getElementById('latitude').value);
